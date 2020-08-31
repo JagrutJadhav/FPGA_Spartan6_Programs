@@ -1,12 +1,12 @@
 // Code written by Jagrut Jadhav
 
 module blink (	input clk,				//clock input
-					output [7:0] LED);	//8 leds outputs
+		output [7:0] LED);			//8 leds outputs
 
-reg [7:0] LED_status = 8'h00;			//set leds low initially 
+reg [7:0] LED_status = 8'h00;				//set leds low initially 
 reg [7:0] data = 8'h0; 					//case variable
-wire done1;									//ref step down clock signal 
-count c (.clk(clk),.done(done1));	//instantiation 
+wire done1;						//ref step down clock signal 
+count c (.clk(clk),.done(done1));			//instantiation 
 
 always @ (posedge done1)
 begin
