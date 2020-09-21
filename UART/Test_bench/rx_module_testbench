@@ -1,0 +1,99 @@
+`timescale 1ns / 1ps
+
+////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer:Jagrut Jadhav
+//
+// Create Date:   15:27:05 09/20/2020
+// Design Name:   rx
+// Project Name:  UART
+// 
+////////////////////////////////////////////////////////////////////////////////
+
+module RX_TB;
+
+	// Inputs
+	reg data;
+	reg baud_clk;
+	reg rst;
+	reg clk;
+
+	// Outputs
+	wire rx_ready;
+	wire rx_in_en;
+	wire [7:0] dout;
+
+	// Instantiate the Unit Under Test (UUT)
+	rx uut (
+		.data(data), 
+		.baud_clk(baud_clk), 
+		.rst(rst), 
+		.clk(clk), 
+		.rx_ready(rx_ready), 
+		.rx_in_en(rx_in_en), 
+		.dout(dout)
+	);
+
+	always #1 clk <= ~clk;
+	
+	always @(posedge clk)
+	begin
+	 if (rx_in_en == 1'b1) begin
+	  baud_clk = 1'b1;
+	  #1250;
+	  baud_clk = 1'b0;
+	  #1250;
+	  end
+	  
+	 else 
+		baud_clk = 1'b0;
+	
+	end
+	initial begin
+		// Initialize Inputs
+		data = 1'b1;
+		baud_clk = 1'b0;
+		rst = 0;
+		clk = 0;
+
+		// Wait 100 ns for global reset to finish
+		#1000;
+		data = 1'b0;
+		
+		#2500;
+		data = 1'b1;
+		
+		#2500;
+		data = 1'b0;
+		
+		#2500;
+		data = 1'b0;
+		
+		#2500;
+		data = 1'b0;
+		
+		#2500;
+		data = 1'b0;
+		
+		#2500;
+		data = 1'b0;
+		
+		#2500;
+		data = 1'b1;
+		
+		#2500;
+		data = 1'b0;
+		
+		#2500;
+		data = 1'b1;
+		
+	  
+		
+		
+        
+		// Add stimulus here
+
+	end
+      
+endmodule
+
