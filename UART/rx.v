@@ -25,23 +25,28 @@ parameter bit_8  = 4'b1000;
 parameter stop   = 4'b1001;
 parameter idle   = 4'b1111;
 
-reg [3:0] state = st_bit;
+reg [3:0] state = bit_1;
 reg [7:0] rx_buff = 8'h00;
 reg [7:0] rx_buff_out = 8'h00;
 reg rx_ready_bit = 1'b1;
-reg din = 1'b0;
+reg rx_rst = 1'b0;
+reg rx_end = 1'b0;
+//reg din = 1'b0;
 reg enable = 1'b0;
-always @ (posedge rst,posedge baud_clk)
+always @ (posedge rx_rst,posedge baud_clk)
 begin
-	if (rst)
+	if (rx_rst)
 	begin
 		rx_ready_bit <= 1'b1;
-		state <= st_bit;
+		rx_buff <= 8'h00;
+		rx_end = 1'b0;
+		state <= bit_1;
 	end
-	else if(din == 1'b1)
+	else if(enable == 1'b1)
 	begin
-		
+		rx_end = 1'b0;
 		case (state)
+		
 			
 			st_bit : begin
 						state <= bit_1;
@@ -49,6 +54,7 @@ begin
 						end
 			bit_1  : begin
 						rx_buff[0] <= data;
+						rx_ready_bit <= 1'b0;
 						state <= bit_2;
 						end
 			bit_2  : begin
@@ -80,8 +86,9 @@ begin
 						state <= stop;
 						end
 			stop   : begin
-						state <= st_bit;
+						state <= bit_1;
 						rx_ready_bit <= 1'b1;
+						rx_end = 1'b1;
 						end
 			default : state <= bit_1;
 		endcase	
@@ -91,22 +98,21 @@ always @ (posedge clk, posedge rst)
 begin
 if (rst) 
 begin
-	rx_buff <= 8'h00;
 	enable <= 1'b0;
-	din <= 1'b0;
+	rx_rst <= 1'b0;
+end
+
+else if (rx_end == 1'b1 && enable == 1'b1)
+begin
+	  enable <= 1'b0;
+	  rx_buff_out <= rx_buff;
+	  rx_rst <= 1'b1;
 end
 else if (data == 1'b0)
 begin
-		din <= 1'b1;
 		enable <= 1'b1;
 end
-else if (rx_ready_bit == 1'b1)
-begin
-	rx_buff_out <= rx_buff;
-	enable <= 1'b0;
-	din <= 1'b0;
-end
-
+else rx_rst <= 1'b0;
 
 
 end		
