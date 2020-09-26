@@ -1,9 +1,9 @@
 // Code written by Jagrut Jadhav
 
 module button(	input rst,
-					input clk,
-					input button,
-					output [7:0] LED);
+				input clk,
+				input button,
+				output [7:0] LED);
 					
 reg [7:0] count = 8'd0;
 wire but;
@@ -28,8 +28,8 @@ assign LED = count;
 endmodule
 
 module debounce (input clk,		// module to debounce signal
-			input signal,
-			output reg db = 1'b0);  // output debounce signal
+				input signal,
+				output reg db = 1'b0);  // output debounce signal
 reg sig_0 =1'b0;
 reg sig_1 = 1'b0;
 reg [15:0] count = 16'b0;
