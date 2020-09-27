@@ -1,0 +1,15 @@
+NET "clk" LOC = "P87";
+NET "rst" LOC = "P17" ;
+//NET "button" LOC = "P7" ;
+//NET "En_butt" LOC = "P10" ;
+net "D[7]" LOC = "P50" ;
+net "D[6]" LOC = "P47" ;
+net "D[5]" LOC = "P45" ;
+net "D[4]" LOC = "P43" ;
+net "D[3]" LOC = "P40" ;
+net "D[2]" LOC = "P34" ;
+net "D[1]" LOC = "P32" ;
+net "D[0]" LOC = "P29" ;
+net "E"  LOC = "P26" ;
+net "RW" LOC = "P23" ;
+net "RS" LOC = "P21" ;
