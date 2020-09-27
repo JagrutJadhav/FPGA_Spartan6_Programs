@@ -172,7 +172,7 @@ end
 always @ (posedge clk) 
 begin
 
-	if (counter == 1000)			//300 milli seconds (3000000)
+	if (counter == 1000)			
 		begin
 		done <= ~done;
 		counter <= 32'b0;
