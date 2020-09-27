@@ -1,140 +1,166 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date:    19:12:29 09/26/2020 
-// Design Name: 
+// Engineer: Jagrut Jadhav
 // Module Name:    LCD_top 
-// Project Name: 
-// Target Devices: 
-// Tool versions: 
-// Description: 
-//
-// Dependencies: 
-//
-// Revision: 
-// Revision 0.01 - File Created
-// Additional Comments: 
-//
+//Descriptions : This display uses 4 buttons to send command or data ,
+// It has 3 modules instantiated in (UART , Debouncer and clk_divider)
 //////////////////////////////////////////////////////////////////////////////////
-module LCD_top(
+module lcd_interface(
 		input clk,
-		//input button,
+		input cmd_button,     //this button sends data to the LCD
+		input data_button,    // this button sends command to the lcd
 		input rst,
+		
+		input normal,   // input button to wipe out command and data button ragisters
+		
+		input rx_data,
+		
 		output [7:0] D,
 		output RS,
 		output RW,
-		output E
+		output E,
+		
+		output cmd_led,
+		output data_led
     );
 	 
 parameter init = 4'b0000;
-parameter char1 = 4'b0001;
-parameter char2 = 4'b0010;
-parameter char3 = 4'b0011;
-parameter char4 = 4'b0100;
-parameter char5 = 4'b0101;
-parameter char6 = 4'b0110;
-parameter idle = 4'b1111;
-
-parameter init_1 = 3'b000;
-parameter init_2= 3'b001;
-parameter init_3= 3'b010;
-parameter init_4= 3'b100;
-parameter init_5= 3'b101;
+parameter cmd_st = 4'b0001;
+parameter data_st = 4'b0010;
+parameter stop = 4'b0011;
 
 wire done1;						//ref step down clock signal 
 reg RS_out =1'b0;
 reg RW_out =1'b0;
 reg E_out =1'b0;
 reg [7:0] data = 8'h00;
-reg [3:0] state = idle;
-reg [2:0] init_state = init_1 ;
-reg init_E =1'b0;
-reg [7:0] init_data = 8'h00; 
-reg initiate = 1'b0, init_done = 1'b0;
+reg [3:0] state = init;
 
-wire but;
+wire [7:0] rx_parallel;	//8 bit parallel data fetched from rx 
+wire rx_ready;		//indication that we can get the data from rx.(ready = 0 means that it is receieving data from UART and is between process)
+
+reg [7:0] rx_buffer;
+wire cmd_but;
+wire data_but;
+wire norm_but;
+reg d_led = 1'b0;
+reg c_led =1'b0;
+
+reg c_but = 1'b0;
+reg d_but = 1'b0;
 
 count c (.clk(clk) ,.done(done1));			//instantiation 
 
-//debounce c (.clk(clk),.signal(button),.db(but));	//instantiation 
+ uart_top  rx_UART ( 	.clk(clk),				//system-clk signal
+												.rst(rst),				//reset signal active-high
+												.rx_data(rx_data),			//rx signal input from UART
+												.tx_enable(),		//enable pin to transmit data to activate UART tx. ENABLE SHOULD BE KEPT HIGH UNTIL data is transmitted
+												.tx_parallel(),	//8_bit parallel data to bve transmitted to tx
+												.rx_parallel(rx_parallel),	//8 bit parallel data fetched from rx 
+												.rx_ready(rx_ready),		//indication that we can get the data from rx.(ready = 0 means that it is receieving data from UART and is between process)
+												.tx_ready(),		//indication that tx is ready to input value.(ready = 0 means it is transmitting previous data and is between process)
+												.tx_data	()		//tx signal out to UART
+										);
 
-always @ (posedge done1, posedge rst)
+debounce norm_de (.clk(clk),.signal(normal),.db(norm_but));	//instantiation 
+debounce cmd_de (.clk(clk),.signal(cmd_button),.db(cmd_but));	//instantiation 
+debounce data_de (.clk(clk),.signal(data_button),.db(data_but));	//instantiation 
+
+always @ (posedge clk, posedge rst)
 begin
 if (rst)
 	begin
-	RS_out <= 1'b0;
-	RW_out <= 1'b0;
-	initiate <= 1'b0;
-	init_state <= init_1;
-	state <= idle;
+	rx_buffer <= 8'h00;
+	c_led <= 1'b0;
+	d_led <= 1'b0;
+	c_but <= 1'b0;
+   d_but <= 1'b0;
 	end
 else 
 	begin
-		if (E_out == 1'b1)  E_out <= 1'b0;
-		else begin
-		case (state)
-			idle : state <= init;
-			init : begin
-						initiate <= 1'b1;
-						RS_out <= 1'b0;
-						//E_out <= 1'b0;
-						RW_out <= 1'b0;
-						case (init_state) 
-						init_1 : begin
-										data <= 8'h38;
-										E_out <= 1'b1;
-										init_state <= init_2;
-										end
-						init_2 : begin
-										data <= 8'h0f;
-										E_out <= 1'b1;
-										init_state <= init_3;
-										end
-						init_3 : begin
-										data <= 8'h01;
-										E_out <= 1'b1;
-										init_state <= init_4;
-									end
-						init_4 : begin
-										data <= 8'h80;
-										E_out <= 1'b1;
-										init_state <= init_4;
-										state <= char1;
-										end
-						init_5 : begin
-										//init_data <= 8'h80;
-										E_out <= 1'b0;
-										state <= char1;
-										init_done <= 1'b1;
-										init_state <= init_1;
-										end
-						default :E_out <= 1'b0;
-					endcase 
-					end
-			char1 : begin
-							  RS_out <= 1'b1;
-						     RW_out <= 1'b0;
-							  E_out <= 1'b0;
-							  data <= 8'h4a;   //print J
-							end
-			default : state <= init;
-		
-		endcase
+	rx_buffer <= rx_parallel;
+	if(cmd_but == 1'b1)
+		begin
+			c_led <= 1'b1;
+			c_but <= 1'b1;
+			d_but <= 1'b0;
+			d_led <= 1'b0;
 		end
+	else if (data_but == 1'b1)
+		begin
+			c_led <= 1'b0;
+			d_led <= 1'b1;
+			c_but <= 1'b0;
+			d_but <= 1'b1;
+		end
+	else if (norm_but == 1'b1)
+		begin
+				c_led <= 1'b0;
+				d_led <= 1'b0;
+				c_but <= 1'b0;
+				d_but <= 1'b0;
+		end
+	end
+end
+
+always  @ (posedge done1, posedge rst)
+begin
+	if (rst)
+	begin
+	RS_out <= 1'b0;
+	RW_out <= 1'b0;
+	state <= init;
+	E_out <= 1'b0;
+	end
+	else
+	begin
+		case (state)
+			init : begin
+							E_out <= 1'b0;
+							if (c_but == 1'b1)
+								state <= cmd_st;
+							else if (d_but == 1'b1 )
+								state <= data_st;
+						end
+			cmd_st : begin
+								if (rx_ready == 1'b1)
+								 begin
+										E_out <= 1'b1;
+										RS_out <= 1'b0;
+										data <= rx_buffer;
+										state <= stop;
+								 end
+						end
+			data_st : begin
+								if (rx_ready == 1'b1)
+								 begin
+										E_out <= 1'b1;
+										RS_out <= 1'b1;
+										data <= rx_buffer;
+										state <= stop;
+								 end
+								 end
+			stop :   begin
+								if (norm_but)
+									state <= init;
+								else state <= stop;
+							end
+				
+			default : E_out <= 1'b0;
+		endcase
 	end
 
 end
-
 
 assign RS = RS_out;
 assign RW = RW_out;
 assign E =  E_out ;
 assign D = data;
+assign cmd_led = c_led;
+assign data_led = d_led;
 endmodule
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 module count (input clk,		// module to step down the clock signal
 			output reg done);
@@ -155,7 +181,7 @@ begin
 end	
 endmodule
 
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 module debounce (input clk,		// module to debounce signal
 				input signal,
 				output reg db = 1'b0);  // output debounce signal
