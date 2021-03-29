@@ -12,15 +12,15 @@
 // 9600 <= 1250clk <= 0x4E2
 // 12500<= 104clk  <= 0x068
 //////////////////////////////////////////////////////////////////////////////////
-module uart_top( 	input 				clk,					//system-clk signal
-									input 				rst,					//reset signal active-high
-									input 				rx_data,			//rx signal input from UART
-									input 				tx_enable,		//enable pin to transmit data to activate UART tx. ENABLE SHOULD BE KEPT HIGH UNTIL data is transmitted
-									input 	[7:0] tx_parallel,	//8_bit parallel data to bve transmitted to tx
-									output 	[7:0] rx_parallel,	//8 bit parallel data fetched from rx 
-									output 				rx_ready,			//indication that we can get the data from rx.(ready = 0 means that it is receieving data from UART and is between process)
-									output 				tx_ready,			//indication that tx is ready to input value.(ready = 0 means it is transmitting previous data and is between process)
-									output 				tx_data				//tx signal out to UART
+module uart_top( input clk,			//system-clk signal
+		input 	rst,			//reset signal active-high
+		input 	rx_data,		//rx signal input from UART
+		input 	tx_enable,		//enable pin to transmit data to activate UART tx. ENABLE SHOULD BE KEPT HIGH UNTIL data is transmitted
+		input 	[7:0] tx_parallel,	//8_bit parallel data to bve transmitted to tx
+		output 	[7:0] rx_parallel,	//8 bit parallel data fetched from rx 
+		output 	rx_ready,		//indication that we can get the data from rx.(ready = 0 means that it is receieving data from UART and is between process)
+		output 	tx_ready,		//indication that tx is ready to input value.(ready = 0 means it is transmitting previous data and is between process)
+		output 	tx_data			//tx signal out to UART
 								);
  //Baud generator sognals
  wire baud_rate;
@@ -34,32 +34,32 @@ module uart_top( 	input 				clk,					//system-clk signal
  wire rx_in_en;
  wire [7:0] dout;
  
- baud_gen baud						// module to generate baudrate
-				(.clk(clk),
-				.ena(enable),
-				.rst(rst),
-				.baud_clk
-				);
+ baud_gen baud				// module to generate baudrate
+	(.clk(clk),
+	.ena(enable),
+	.rst(rst),
+	.baud_clk
+	);
  
 
- tx trans (.din(tx_parallel),			// module tx instantiated
-			 .tx_out_en(tx_enable),
-			 .baud_clk(baud_clk),
-			 .rst(rst),
-			 .clk(clk),
-			 .ready(tx_ready),
-			 .data(data)
-			);
+ tx trans (.din(tx_parallel),		// module tx instantiated
+	 .tx_out_en(tx_enable),
+	 .baud_clk(baud_clk),
+	 .rst(rst),
+	 .clk(clk),
+	 .ready(tx_ready),
+	 .data(data)
+	);
 
- rx reci (                 //module rx 
-		.data(rx_data), 
-		.baud_clk(baud_clk), 
-		.rst(rst), 
-		.clk(clk), 
-		.rx_ready(rx_ready), 
-		.rx_in_en(rx_in_en), 
-		.dout(dout)
-		);	 
+ rx reci (                 		//module rx 
+	.data(rx_data), 
+	.baud_clk(baud_clk), 
+	.rst(rst), 
+	.clk(clk), 
+	.rx_ready(rx_ready), 
+	.rx_in_en(rx_in_en), 
+	.dout(dout)
+	);	 
 
 assign rx_parallel = dout;
 assign enable = tx_enable | rx_in_en;
