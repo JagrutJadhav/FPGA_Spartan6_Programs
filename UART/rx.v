@@ -5,13 +5,13 @@
 // Module Name:    rx 
 //////////////////////////////////////////////////////////////////////////////////
 module rx(input data,
-			 input baud_clk,
-			 input rst,
-			 input clk,
-			 //input rx_enable,
-			 output rx_ready,
-			 output rx_in_en,
-			 output [7:0] dout
+	  input baud_clk,
+	  input rst,
+	  input clk,
+	  //input rx_enable,
+	  output rx_ready,
+	  output rx_in_en,
+	  output [7:0] dout
     );
 parameter st_bit = 4'b0000;
 parameter bit_1  = 4'b0001;
@@ -46,52 +46,50 @@ begin
 	begin
 		rx_end = 1'b0;
 		case (state)
-		
-			
-			st_bit : begin
-						state <= bit_1;
-						rx_ready_bit <= 1'b0;
-						end
-			bit_1  : begin
-						rx_buff[0] <= data;
-						rx_ready_bit <= 1'b0;
-						state <= bit_2;
-						end
-			bit_2  : begin
-						rx_buff[1] <= data;
-						state <= bit_3;
-						end
-			bit_3  : begin
-						rx_buff[2] <= data;
-						state <= bit_4;
-						end
-			bit_4  : begin
-						rx_buff[3] <= data;
-						state <= bit_5;
-						end
-			bit_5  : begin
-						rx_buff[4] <= data;
-						state <= bit_6;
-						end
-			bit_6  : begin
-						rx_buff[5] <= data;
-						state <= bit_7;
-						end
-			bit_7  : begin
-						rx_buff[6] <= data;
-						state <= bit_8;
-						end
-			bit_8  : begin
-						rx_buff[7] <= data;
-						state <= stop;
-						end
-			stop   : begin
-						state <= bit_1;
-						rx_ready_bit <= 1'b1;
-						rx_end = 1'b1;
-						end
-			default : state <= bit_1;
-		endcase	
+		st_bit : begin
+			state <= bit_1;
+			rx_ready_bit <= 1'b0;
+			end
+		bit_1  : begin
+			rx_buff[0] <= data;
+			rx_ready_bit <= 1'b0;
+			state <= bit_2;
+			end
+		bit_2  : begin
+			rx_buff[1] <= data;
+			state <= bit_3;
+			end
+		bit_3  : begin
+			rx_buff[2] <= data;
+			state <= bit_4;
+			end
+		bit_4  : begin
+			rx_buff[3] <= data;
+			state <= bit_5;
+			end
+		bit_5  : begin
+			rx_buff[4] <= data;
+			state <= bit_6;
+			end
+		bit_6  : begin
+			rx_buff[5] <= data;
+			state <= bit_7;
+			end
+		bit_7  : begin
+			rx_buff[6] <= data;
+			state <= bit_8;
+			end
+		bit_8  : begin
+			rx_buff[7] <= data;
+			state <= stop;
+			end
+		stop   : begin
+			state <= bit_1;
+			rx_ready_bit <= 1'b1;
+			rx_end = 1'b1;
+			end
+		default : state <= bit_1;
+	endcase	
 	end
 end	
 always @ (posedge clk, posedge rst)	
