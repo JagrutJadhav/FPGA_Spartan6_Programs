@@ -11,16 +11,16 @@
 // 9600 <= 1250clk <= 0x4E2
 // 12500<= 104clk  <= 0x068
 //////////////////////////////////////////////////////////////////////////////////
-module baud_gen						// module to generate baudrate
-					(input clk,
-					 input ena,
-					 input rst,
-					 output baud_clk);
+module baud_gen				// module to generate baudrate
+	(input clk,
+	input ena,
+	input rst,
+	output baud_clk);
 					 
 parameter baud_rate = 12'h4e2;		//initalize with 9600 baudrate at 12MHz clk
 					 
-reg [11:0] count = 12'h000;			//set counter to 0
-reg signal = 1'b0;						//signal if counter reaches baudrate 
+reg [11:0] count = 12'h000;		//set counter to 0
+reg signal = 1'b0;			//signal if counter reaches baudrate 
 always @ (posedge clk, posedge rst)
 begin
 if(rst)
